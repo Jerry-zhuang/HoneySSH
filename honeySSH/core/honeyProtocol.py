@@ -144,10 +144,10 @@ class HoneyPotInteractiveProtocol(HoneyBaseProtocol, recvline.HistoricRecvLine):
         # transport.factory.sessions[transport.transport.sessionno] = self
 
         self.keyHandlers.update({
-            '\x04':     self.handle_CTRL_D,
-            '\x15':     self.handle_CTRL_U,
-            '\x03':     self.handle_CTRL_C,
-            '\x09':     self.handle_TAB,
+            b'\x04':     self.handle_CTRL_D,
+            b'\x15':     self.handle_CTRL_U,
+            b'\x03':     self.handle_CTRL_C,
+            b'\x09':     self.handle_TAB,
             })
 
     # this doesn't seem to be called upon disconnect, so please use

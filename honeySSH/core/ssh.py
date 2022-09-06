@@ -6,24 +6,27 @@ from zope.interface import implementer
 
 import twisted
 from twisted.conch import avatar
-from twisted.conch.checkers import InMemorySSHKeyDB, SSHPublicKeyChecker
 from twisted.conch.ssh import connection, factory, keys, session, userauth, transport
-from twisted.conch.ssh.transport import SSHServerTransport
 from twisted.cred import portal
 from twisted.conch.openssh_compat import primes
 from twisted.cred.checkers import InMemoryUsernamePasswordDatabaseDontUse
-from twisted.internet import protocol, reactor
-from twisted.python import components, log
-
+from twisted.internet import  reactor
+from twisted.python import log
+from twisted.conch.ssh.common import NS, getNS
 from honeySSH.core import honeyCMD, honeyProtocol
 from honeySSH.core.config import config         # 读取配置文件的工具
 from honeySSH.core.utils import str2byte
+from honeySSH.core.log import logger
 
 log.startLogging(sys.stderr)
 
-# Path to RSA SSH keys used by the server.
-SERVER_RSA_PRIVATE = "ssh-keys/ssh_host_rsa_key"
-SERVER_RSA_PUBLIC = "ssh-keys/ssh_host_rsa_key.pub"
+class HoneySSHUserAuthServer(userauth.SSHUserAuthServer):
+    
+    def auth_password(self, packet):
+        password = getNS(packet[1:])[0]
+        self.transport.logger.add_password(self.user.decode(), password.decode())
+        return userauth.SSHUserAuthServer.auth_password(self, packet)
+
 
 class HoneySSHTransport(transport.SSHServerTransport):
 
@@ -36,15 +39,19 @@ class HoneySSHTransport(transport.SSHServerTransport):
         - 蜜罐IP
         - 蜜罐端口
         """
+        self.interactors = []
+        self.logintime = time.time()
+        self.log_open = False
+        # [todo] 日志信息
+        self.log_file = time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())) + ".log"
+        self.logger = logger(self.log_file, self.logintime)
+
         # 打印相关信息到终端
         print('New connection: %s:%s (%s:%s) [session: %d]' % \
             (self.transport.getPeer().host, self.transport.getPeer().port,
             self.transport.getHost().host, self.transport.getHost().port,
             self.transport.sessionno))
-        self.interactors = []
-        self.logintime = time.time()
-        self.ttylog_open = False
-        # [todo] 日志信息
+        self.logger.set_IP_Port(self.transport.getPeer().host, self.transport.getPeer().port)
         transport.SSHServerTransport.connectionMade(self)
 
     def sendKexInit(self):
@@ -66,11 +73,13 @@ class HoneySSHTransport(transport.SSHServerTransport):
     def ssh_KEXINIT(self, packet):
         # 输出客户端SSH的版本信息
         print('Remote SSH version: %s' % (self.otherVersionString,))
+        # 日志存储
+        self.logger.set_ssh_version(self.otherVersionString.decode())
         return transport.SSHServerTransport.ssh_KEXINIT(self, packet)
 
     def connectionLost(self, reason):
-        for i in self.interactors:
-            i.sessionClosed()
+        # for i in self.interactors:
+        #     i.sessionClosed()
         # if self.transport.sessionno in self.factory.sessions:
         #     del self.factory.sessions[self.transport.sessionno]
         # self.lastlogExit()
@@ -139,11 +148,9 @@ class HoneySSHRealm:
         return interfaces[0], HoneySSHAvatar(avatarId, self.env), lambda: None
 
 class HoneySSHFactory(factory.SSHFactory):
-
-    # protocol = HoneySSHTransport
     # Service handlers.
     services = {
-        b"ssh-userauth": userauth.SSHUserAuthServer,
+        b"ssh-userauth": HoneySSHUserAuthServer,
         b"ssh-connection": connection.SSHConnection,
     }
 
