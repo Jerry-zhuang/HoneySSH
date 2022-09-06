@@ -1,1 +1,0 @@
-{"loginInfo": {"ip": "172.25.0.1", "port": 52686, "login time": "2022-09-06 07:56:05", "username and password": "log/2022-09-06 07:56:05/2022-09-06 07:56:05.log", "remote SSH version": "SSH-2.0-OpenSSH_8.2p1 Ubuntu-4ubuntu0.5"}, "commands": [{"time": "2022-09-06 07:56:09", "command": "ls"}, {"time": "2022-09-06 07:57:06", "command": "exit"}]}
