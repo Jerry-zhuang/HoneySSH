@@ -1,0 +1,8 @@
+version: '3'
+services:
+  honeyssh:
+    build: .
+    ports:
+      - "5022:5022"
+    volumes:
+      - .:/root/HoneySSH/

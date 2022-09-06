@@ -32,6 +32,10 @@ class HoneyBaseProtocol(insults.TerminalProtocol):
         msg = ':dispatch: ' + msg
         # transport.factory.logDispatch(transport.transport.sessionno, msg)
 
+    def logCommand(self, command):
+        transport = self.terminal.transport.session.conn.transport
+        transport.logger.add_command(command)
+
     def connectionMade(self):
         self.displayMOTD()
 
@@ -55,25 +59,8 @@ class HoneyBaseProtocol(insults.TerminalProtocol):
         except:
             pass
 
-    # this doesn't seem to be called upon disconnect, so please use
-    # HoneyPotTransport.connectionLost instead
     def connectionLost(self, reason):
         pass
-        # not sure why i need to do this:
-        # scratch that, these don't seem to be necessary anymore:
-        #del self.fs
-        #del self.commands
-
-    # [todo]
-    # def txtcmd(self, txt):
-    #     class command_txtcmd(core.honeypot.HoneyPotCommand):
-    #         def call(self):
-    #             print('Reading txtcmd from "%s"' % txt)
-    #             f = open(txt, 'r')
-    #             self.write(f.read())
-    #             f.close()
-    #     return command_txtcmd
-
     def getCommand(self, cmd, paths):
         if not len(cmd.strip()):
             return None
@@ -91,10 +78,7 @@ class HoneyBaseProtocol(insults.TerminalProtocol):
                     path = i
                     break
             pass
-        # txt = os.path.abspath('%s/%s' % \
-        #     (self.env.cfg.get('honeypot', 'txtcmds_path'), path))
-        # if os.path.exists(txt) and os.path.isfile(txt):
-        #     return self.txtcmd(txt)
+
         if path in self.commands:
             return self.commands[path]
         return None
@@ -207,7 +191,7 @@ class HoneyPotInteractiveProtocol(HoneyBaseProtocol, recvline.HistoricRecvLine):
 
 class LoggingServerProtocol(insults.ServerProtocol):
     def connectionMade(self):
-        # transport = self.transport.session.conn.transport
+        transport = self.transport.session.conn.transport
 
         # transport.ttylog_file = '%s/tty/%s-%s.log' % \
         #     (config().get('honeypot', 'log_path'),

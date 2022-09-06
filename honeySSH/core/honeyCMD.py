@@ -117,10 +117,9 @@ class HoneyShell(object):
         cmdclass = self.honeypot.getCommand(cmd, envvars['PATH'].split(':'))
         if cmdclass:
             print('Command found: %s' % (line,))
-            self.honeypot.logDispatch('Command found: %s' % (line,))
+            self.honeypot.logCommand(line)  # 调用存储指令到日志
             self.honeypot.call_command(cmdclass, *rargs)
         else:
-            self.honeypot.logDispatch('Command not found: %s' % (line,))
             print('Command not found: %s' % (line,))
             if len(line):
                 self.honeypot.writeln('bash: %s: command not found' % cmd)

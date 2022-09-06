@@ -14,18 +14,11 @@ from honeySSH.core.config import config
 #     "remote SSH version":None
 #   },
 #   "commands":[],
-#   "file":[]
 # }
 # 其中commands的格式
 # {
 #   "time":None,
 #   "command":None
-# }
-# 其中file的格式
-# {
-#   "time":None,
-#   "type":None,
-#   "path":None
 # }
 
 
@@ -33,11 +26,12 @@ class logger():
 
     def __init__(self, log_file, logintime) -> None:
 
+        if not os.path.exists(config().get("log", "log_path")):
+            os.mkdir(config().get("log", "log_path"))
         self.log_path = config().get("log", "log_path") + log_file
         self.time = time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(logintime))
         self.pw_path = config().get("log", "log_path") + self.time + "/" +log_file
         self.commands = []
-        self.file = []
         self.log_json = {
                         "loginInfo":{
                             "ip":None,
@@ -47,17 +41,11 @@ class logger():
                             "remote SSH version":None
                             },
                         "commands":self.commands,
-                        "file":self.file
                         }
         self.command_json = {
                               "time":None,
                               "command":None
                             }
-        self.file_json = {
-                          "time":None,
-                          "type":None,
-                          "path":None
-                        }
         print("[log] 创建日志文件：%s" % self.log_path)
         print("[log] 创建爆破账号密码记录文件：%s", self.pw_path)
         self.creat_password_file()
@@ -76,11 +64,16 @@ class logger():
         f.close()
         return self.log_json
 
-    def add_command(self, command, logpath):
-        pass
-
-    def add_file(self, file, logpath):
-        pass
+    def add_command(self, command):
+        self.read()
+        ctime = time.strftime('%Y-%m-%d %H:%M:%S',time.localtime())
+        self.commands.append({
+                              "time":ctime,
+                              "command":command
+                            })
+        self.log_json["commands"] = self.commands
+        self.write()
+        print("[log] %s 存储指令： %s" % (ctime, command))
 
     def set_IP_Port(self, ip, port):
         self.read()

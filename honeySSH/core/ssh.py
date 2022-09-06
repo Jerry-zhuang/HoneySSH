@@ -199,7 +199,8 @@ class HoneySSHFactory(factory.SSHFactory):
 
         if not self.primes:
             ske = t.supportedKeyExchanges[:]
-            ske.remove('diffie-hellman-group-exchange-sha1')
+            print(ske)
+            ske.remove(b'diffie-hellman-group-exchange-sha1')
             t.supportedKeyExchanges = ske
 
         t.factory = self
