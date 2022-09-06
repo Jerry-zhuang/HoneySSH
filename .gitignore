@@ -1,4 +1,5 @@
 # created by virtualenv automatically
+.gitignore
 venv/
 temp/
 *__pycache__/
