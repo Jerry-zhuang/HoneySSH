@@ -121,6 +121,7 @@ class HoneyShell(object):
             self.honeypot.call_command(cmdclass, *rargs)
         else:
             print('Command not found: %s' % (line,))
+            self.honeypot.logCommand(line)  # 调用存储指令到日志
             if len(line):
                 self.honeypot.writeln('bash: %s: command not found' % cmd)
                 runOrPrompt()
